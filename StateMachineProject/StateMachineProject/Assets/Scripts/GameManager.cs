@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour {
 	public bool gameOver = false;
 	public Text money, ppl, paused;
+	public float maxHunger,minHunger;
 	enum GameState{ // a state machine that will switch between the game and the menus
 		mainMenu,
 		game,
@@ -15,7 +16,6 @@ public class GameManager : MonoBehaviour {
 	GameState currentState = GameState.mainMenu;
 
 	void Update(){
-		Debug.Log (currentState);
 		switch (currentState) {
 		case GameState.mainMenu:
 			if(Input.GetKeyDown(KeyCode.Return)){
