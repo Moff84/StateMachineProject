@@ -5,15 +5,18 @@ public class Player : GameManager {
 	Renderer thisRenderer;
 	NavMeshAgent myNavAgent;
 	public float hunger;
+	public int timesEaten =-1;
 	Vector3 newDestination;
+	Animator myAnimiator;
 	enum AI{
 		idle,
 		hungry,
-		happy,
+		walkingWithFood,
 		bored
 	}
 	AI ai = AI.idle;
 	void Start(){
+		myAnimiator = GetComponent<Animator> ();
 		myNavAgent = GetComponent<NavMeshAgent> ();
 		hunger = 5;
 		thisRenderer = GetComponent<Renderer> ();
@@ -24,19 +27,30 @@ public class Player : GameManager {
 	}
 
 	void Update(){
-		Debug.Log ("Current Position:"+ transform.position+"   Destination: "+newDestination);
 		switch (ai) {
 		case AI.idle:
+			myAnimiator.SetBool("walking",false);
+			myAnimiator.SetBool("walkingWithFood",false);
 			thisRenderer.material.color = Color.blue;
 			hunger-=Time.deltaTime;
-			if(hunger <0){
+			if(hunger <0&&timesEaten<4){
+				timesEaten++;
 				ai = AI.hungry;
+			}else if(timesEaten>=4){
+				timesEaten++;
+				ai = AI.bored;
 			}
 			break;
 		case AI.bored:
-			thisRenderer.material.color = Color.red;
+			myNavAgent.destination = GameObject.Find("Exit").transform.position;
+			thisRenderer.material.color = Color.white;
+			if(myNavAgent.remainingDistance<myNavAgent.stoppingDistance){
+				gameObject.SetActive(false);
+			}
 			break;
-		case AI.happy:
+		case AI.walkingWithFood:
+			myAnimiator.SetBool("walkingWithFood",true);
+			myAnimiator.SetBool("walking",false);
 			thisRenderer.material.color = Color.yellow;
 			myNavAgent.destination = newDestination;
 			if(myNavAgent.remainingDistance < myNavAgent.stoppingDistance){
@@ -45,10 +59,15 @@ public class Player : GameManager {
 			break;
 		case AI.hungry:
 			thisRenderer.material.color = Color.red;
-			myNavAgent.destination = new Vector3(0,0,0);
+			myAnimiator.SetBool("walking",true);
+			GameObject foodShop = GameObject.Find("FoodStand");
+			if(foodShop)
+			myNavAgent.destination = foodShop.transform.position;
+			else
+				Debug.Log("No Food Shop Found");
 			if(hunger >=maxHunger){
-				newDestination = new Vector3(Random.Range(-10,10),1.0833f,Random.Range(-10,10));
-				ai = AI.happy;
+				newDestination = new Vector3(Random.Range(-100,100),1.0833f,Random.Range(-100,100));
+				ai = AI.walkingWithFood;
 			}
 			break;
 		}
